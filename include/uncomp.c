@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "dedup.h"
+#include "solowan_rolling.h"
 
 #ifdef DEBUG
 #define DBG(x) printf x

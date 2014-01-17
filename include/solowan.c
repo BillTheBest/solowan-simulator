@@ -102,27 +102,24 @@ int optimize(hashtable ht, char *in_packet, size_t in_packet_size, char *out_pac
 	hashptr *tmp;
 	size_t writed = 0;
 
-	//For opennop integration
-	//	if(number_of_hashes != 0){
-
 	// Write the packet header
-	memcpy(out_packet, &number_of_hashes, sizeof(uint16_t));// Number of Hashes in the packet
-	writed += sizeof(uint16_t);
-
-	while(hash_head != NULL){ // List of Hashes
-		memcpy(out_packet + writed, &hash_head->position, sizeof(uint16_t));
+	if(number_of_hashes != 0){
+		memcpy(out_packet, &number_of_hashes, sizeof(uint16_t));// Number of Hashes in the packet
 		writed += sizeof(uint16_t);
-		tmp=hash_head;
-		hash_head = hash_head->next;
-		free(tmp);
+
+		while(hash_head != NULL){ // List of Hashes
+			memcpy(out_packet + writed, &hash_head->position, sizeof(uint16_t));
+			writed += sizeof(uint16_t);
+			tmp=hash_head;
+			hash_head = hash_head->next;
+			free(tmp);
+		}
 	}
-	//	}
-	// Write the metadata with packet size
+
 	memcpy(out_packet + writed, buffer, buffer_size);
 	writed += buffer_size;
 
 	*out_packet_size = writed;
-
 	return 0;
 }
 
@@ -208,3 +205,35 @@ int deoptimize(hashtable as, char *input_packet_ptr, size_t input_packet_size, c
 	return 0;
 }
 
+
+int cache(hashtable ht, char *packet_ptr, size_t packet_size){
+	char *block_ptr;
+	size_t readed; // Number of read bytes in a packet
+	uint32_t hash;
+	int i;
+
+	block_ptr = packet_ptr;
+	readed =0; // Number of read bytes in a packet
+
+	while(packet_size - readed >= CHUNK){ // LOOP OVER BLOCKS
+		readed += CHUNK;
+		hash = MurmurHash2(block_ptr, CHUNK, SEED); // Calculate the hash
+		// Check if the data is already present
+		if(check(ht,hash)){// If the chunk exists
+//			printf("Chunk already exists!!!!!!!!!!!!!!!!!!!!!!!\n");
+//			// Check if it is a collision
+//			if(!check_collision(ht, block_ptr, hash)){ // It's a collision
+//				// Don't save the block and write the original message
+//			} // else no collision no need to cahce
+		}else{ // The chunk does not exists
+			i = put_block(ht, block_ptr, hash); // Store the block
+//			printf("Chunk cached!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+			if (!i){
+				printf("ERROR: Caching.");
+				exit(1);
+			}
+		}
+		block_ptr += CHUNK;
+	}/* END LOOP OVER CHUNKS INSIDE A PACKET */
+	return 0;
+}

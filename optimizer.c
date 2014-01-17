@@ -32,6 +32,7 @@
 #include "include/hashtable.h"
 #include "include/inout.h"
 #include "include/solowan.h"
+#include "include/solowan_rolling.h"
 
 #define MIN_REQUIRED 2
 #define NUMBER_OF_STRINGS 255
@@ -50,6 +51,7 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 	FILE *wan_message, *wan_metamessage, *stats;
 	char out_packet[BUFFER_SIZE*2];
 	int i = 0;
+	int compressed = 0;
 	char *wanmessage;
 	char *wanmetamessage;
 
@@ -92,7 +94,9 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 		// We have a packet: we need to split it in chunks and cache it
 		in_packet = mmap + count; // Pointer to the beginning of the packet
 		optimize(as,  in_packet, in_packet_size, out_packet, &out_packet_size);
-		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session); // Write the packet to file
+//		dedup(in_packet, in_packet_size, out_packet, &out_packet_size);
+		compressed = out_packet_size < in_packet_size;
+		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
 		count += in_packet_size; // Increment count of a packet size
 	} /* END LOOP OVER PACKETS */
 
@@ -100,7 +104,9 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 	//	memcpy(out_packet, mmap + count, size - count);
 	if(size - count > 0){
 		optimize(as,  mmap + count, size - count, out_packet, &out_packet_size);
-		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session); // Write the packet to file
+		compressed = out_packet_size < size - count;
+//		dedup(mmap + count, size - count, out_packet, &out_packet_size);
+		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
 	}
 
 	fprintf(stats,"%s\t%lu\t%lu\n", inputfile, size, writed);
@@ -146,6 +152,9 @@ int main (int argc, char ** argv){
 		printf("Error creating table: EXIT! \n");
 		exit(1);
 	}
+
+	init_dedup();
+	init_uncomp();
 
 	while (1)
 	{

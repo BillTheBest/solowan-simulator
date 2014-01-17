@@ -51,7 +51,7 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 	FILE *wan_metamessage, *outputfile;
 	char *outputname = NULL;
 	char filename[200], tmp[210];
-	int session;
+	int session, compressed;
 	char regenerated_packet[BUFFER_SIZE];
 	size_t regenerated_packet_size;
 	int i;
@@ -76,18 +76,30 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 	packet_ptr = mmap;
 
 	// This loop read line by line the metadata file
-	while ( fscanf(wan_metamessage, "%s %hu %d\n", filename, &input_packet_size, &session) != EOF ) /* Read a line with packet specification*/
-	{
-		deoptimize(as, packet_ptr, input_packet_size, regenerated_packet, &regenerated_packet_size);
-		sprintf(tmp, "%s.%d", filename, session);// Output file name depends on session
-		outputfile = fopen(tmp, "a+");
-		if(!outputfile){
-			printf("Error opening file %s\n", outputname);
-			exit(1);
+	while ( fscanf(wan_metamessage, "%s %hu %d %d\n", filename, &input_packet_size, &session, &compressed) != EOF ){ /* Read a line with packet specification*/
+		if(compressed){
+			deoptimize(as, packet_ptr, input_packet_size, regenerated_packet, &regenerated_packet_size);
+			sprintf(tmp, "%s.%d", filename, session);// Output file name depends on session
+			outputfile = fopen(tmp, "a+");
+			if(!outputfile){
+				printf("Error opening file %s\n", outputname);
+				exit(1);
+			}
+			fwrite(regenerated_packet, regenerated_packet_size , 1, outputfile);
+			packet_ptr += input_packet_size;
+			fclose(outputfile);
+		}else{
+			cache(as, packet_ptr, input_packet_size);
+			sprintf(tmp, "%s.%d", filename, session);// Output file name depends on session
+			outputfile = fopen(tmp, "a+");
+			if(!outputfile){
+				printf("Error opening file %s\n", outputname);
+				exit(1);
+			}
+			fwrite(packet_ptr, input_packet_size , 1, outputfile);
+			packet_ptr += input_packet_size;
+			fclose(outputfile);
 		}
-		fwrite(regenerated_packet, regenerated_packet_size , 1, outputfile);
-		packet_ptr += input_packet_size;
-		fclose(outputfile);
 	}
 	fclose ( wan_metamessage);
 	i = munmap(mmap, size); // Released mapped memory

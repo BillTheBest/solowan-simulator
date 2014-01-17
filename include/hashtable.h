@@ -28,7 +28,7 @@
 #include "as.h"
 
 #define BUFFER_SIZE 1460
-#define CHUNK 365
+#define CHUNK 400
 
 #define NREG 20000000
 #define NORMALIZE(hash) hash%NREG

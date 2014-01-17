@@ -92,11 +92,11 @@ int dump_packet(char *buffer, hashptr *hashlist, uint16_t new_size, uint16_t num
 	return writed;
 }
 
-int dump(char *out_packet, uint16_t out_size, FILE * metadatafile, FILE *outputfile, char *originfilename, int session){
+int dump(char *out_packet, uint16_t out_size, FILE * metadatafile, FILE *outputfile, char *originfilename, int session, int compressed){
 	hashptr *tmp;
 	// Write the metadata with packet size
 	fwrite(out_packet, out_size, 1, outputfile);
-	fprintf(metadatafile, "%s\t%u\t%d\n", originfilename, out_size, session);
+	fprintf(metadatafile, "%s\t%u\t%d\t%d\n", originfilename, out_size, session, compressed);
 	return out_size;
 }
 

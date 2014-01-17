@@ -26,4 +26,5 @@
 
 int optimize(hashtable ht, char *in_packet, size_t in_packet_size, char *out_packet, size_t *out_packet_size);
 int deoptimize(hashtable as, char *input_packet_ptr, size_t input_packet_size, char *regenerated_packet, size_t *output_packet_size);
+int cache(hashtable ht, char *packet_ptr, size_t packet_size);
 #endif /* SOLOWAN_H_ */
