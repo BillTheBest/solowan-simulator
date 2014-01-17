@@ -18,5 +18,5 @@
 *.app
 
 #Statistics
-.csv
-.txt
+*.csv
+*.txt
