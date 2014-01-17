@@ -1,5 +1,5 @@
 /*
- * dedup01.c
+ * hashtable.c
  *
  *     Copyright 2014 Universidad Politécnica de Madrid - Center for Open Middleware
  *     (http://www.centeropenmiddleware.com)
@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "dedup01.h"
+#include "hashtable.h"
 #include "as.h"
 
 #define LOG_DEDUP 0

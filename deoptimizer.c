@@ -30,7 +30,7 @@
 #include <inttypes.h>
 #include <sys/stat.h>
 #include <assert.h>
-#include "include/dedup01.h"
+#include "include/hashtable.h"
 #include "include/inout.h"
 #include "include/solowan.h"
 

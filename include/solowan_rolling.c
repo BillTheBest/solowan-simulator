@@ -1,5 +1,5 @@
 /*
- * dedup02.c
+ * solowan_rolling.c
  *
  *     Copyright 2014 Universidad Politécnica de Madrid - Center for Open Middleware
  *     (http://www.centeropenmiddleware.com)
@@ -27,7 +27,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "dedup02.h"
+#include "solowan_rolling.h"
 
 #ifdef DEBUG
 #define DBG(x) printf x

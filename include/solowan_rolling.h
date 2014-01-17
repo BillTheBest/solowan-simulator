@@ -1,5 +1,5 @@
 /*
- * dedup02.h
+ * solowan_rolling.h
  *
  *     Copyright 2014 Universidad Politécnica de Madrid - Center for Open Middleware
  *     (http://www.centeropenmiddleware.com)

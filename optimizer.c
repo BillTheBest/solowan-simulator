@@ -29,7 +29,7 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <sys/stat.h>
-#include "include/dedup01.h"
+#include "include/hashtable.h"
 #include "include/inout.h"
 #include "include/solowan.h"
 
