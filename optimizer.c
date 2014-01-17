@@ -91,9 +91,8 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 	while(size - count > in_packet_size){// LOOP OVER PACKETS
 		// We have a packet: we need to split it in chunks and cache it
 		in_packet = mmap + count; // Pointer to the beginning of the packet
-		// These variables are aimed to help the structured writing of packets
 		optimize2(as,  in_packet, in_packet_size, out_packet, &out_packet_size);
-		writed += dump_metadata(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session); // Write the packet to file
+		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session); // Write the packet to file
 		count += in_packet_size; // Increment count of a packet size
 	} /* END LOOP OVER PACKETS */
 
