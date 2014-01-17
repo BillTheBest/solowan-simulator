@@ -33,76 +33,7 @@
 
 #define SEED 42
 
-int optimize(hashtable as, char *buffered_packet, char *packet_ptr, size_t packet_size, size_t *new_packet_size, hashptr **hash_head, uint16_t *number_of_hashes){
-	char *block_ptr;
-	size_t readed; // Number of read bytes in a packet
-	hashptr *hashpointer, *tail_hash;
-	uint32_t hash, remaining;
-	int i;
-
-	block_ptr = packet_ptr;
-	readed =0; // Number of read bytes in a packet
-	*new_packet_size=0; // New packet size
-	*hash_head = NULL;
-	*number_of_hashes = 0;
-
-	while(packet_size - readed >= CHUNK){ // LOOP OVER BLOCKS
-		hashpointer = NULL;
-		readed += CHUNK;
-		//		hash = SuperFastHash (block_ptr, CHUNK); // Calculate the hash
-		hash = MurmurHash2(block_ptr, CHUNK, SEED);
-		// Check if the data is already present
-		if(check(as,hash)){// If the chunk exists
-			// Check if it is a collision
-			if(!check_collision(as, block_ptr, hash)){ // It's a collision
-				// Don't save the block and write the original message
-				memcpy(buffered_packet + *new_packet_size, block_ptr, CHUNK); // Write to buffer
-				*new_packet_size += CHUNK; // Update the counter with the block size
-			}else{ // No collision = it's the same block
-				(*number_of_hashes)++; // Add one to the number of hashes in the packet
-				hashpointer = malloc(sizeof(hashptr)); // Allocate the memory for an element
-				if(hashpointer == NULL){
-					printf("Error allocating memory!\n");
-					exit(1);
-				}
-				hashpointer->position = *new_packet_size; //Store the position of the hash
-				hashpointer->next = NULL;
-				// Enter the new hash to the end of the list
-				if(*hash_head == NULL){
-					*hash_head = hashpointer;
-					tail_hash = hashpointer;
-				}else{
-					tail_hash->next = hashpointer;
-					tail_hash = hashpointer;
-				}
-				memcpy(buffered_packet + *new_packet_size, &hash, sizeof(hash)); // Write to buffer
-				*new_packet_size += sizeof(hash);
-			}
-		}else{ // The chunk does not exists
-			i = put_block(as, block_ptr, hash); // Store the block
-			if (!i){
-				printf("ERROR: Deduplicating.");
-				exit(1);
-			}
-			memcpy(buffered_packet + *new_packet_size, block_ptr, CHUNK); // Write to buffer
-			*new_packet_size += CHUNK; // Update the counter with the block size
-		}
-		block_ptr += CHUNK;
-		//			limit++;
-	}/* END LOOP OVER CHUNKS INSIDE A PACKET */
-
-	// Deal with the rest of the packet
-	remaining = BUFFER_SIZE - readed; // So we still have data in the packet that could not fill a block
-	if (remaining != 0){
-		memcpy(buffered_packet + *new_packet_size, block_ptr, remaining); // Write to buffer
-		new_packet_size += remaining;
-	}
-
-
-	return 0;
-}
-
-int optimize2(hashtable ht, char *in_packet, size_t in_packet_size, char *out_packet, size_t *out_packet_size){
+int optimize(hashtable ht, char *in_packet, size_t in_packet_size, char *out_packet, size_t *out_packet_size){
 	char *block_ptr;
 	char buffer[BUFFER_SIZE*2];
 	size_t readed, remaining; // Number of read bytes in a packet
