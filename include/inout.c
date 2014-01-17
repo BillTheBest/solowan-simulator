@@ -29,14 +29,13 @@
 
 #include "inout.h"
 
-int read_structuredfile( char *datafilename, char **map, size_t *size){
-	FILE * datafile, metafile;
+int read_structuredfile( char *datafilename, unsigned char **map, size_t *size){
+	FILE * datafile;
 	struct stat statbuf;
-	char *tmp;
-
 
 	/* open the input file */
-	if ((datafile = open (datafilename, O_RDONLY)) < 0){
+	datafile = open(datafilename, O_RDONLY);
+	if(datafile < 0){
 		printf ("can't open %s for reading", datafilename);
 		exit(0);
 	}
@@ -47,7 +46,7 @@ int read_structuredfile( char *datafilename, char **map, size_t *size){
 	}
 
 
-	*map = (char *)mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, datafile, 0);
+	*map = (unsigned char *)mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, datafile, 0);
 	/* mmap the input file */
 	if (*map == (caddr_t) -1){
 		printf ("mmap error for input");
@@ -61,7 +60,7 @@ int read_structuredfile( char *datafilename, char **map, size_t *size){
 
 
 int writestructuredfile( char *datafilename, char *metafilename, packet *head ){
-	FILE * datafile, metafile;
+	FILE * datafile;
 	struct stat statbuf;
 	char *map;
 

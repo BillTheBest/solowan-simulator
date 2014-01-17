@@ -24,7 +24,7 @@
 #ifndef SOLOWAN_H_
 #define SOLOWAN_H_
 
-int optimize(hashtable ht, char *in_packet, size_t in_packet_size, char *out_packet, size_t *out_packet_size);
-int deoptimize(hashtable as, char *input_packet_ptr, size_t input_packet_size, char *regenerated_packet, size_t *output_packet_size);
-int cache(hashtable ht, char *packet_ptr, size_t packet_size);
+int optimize(hashtable ht, unsigned char *in_packet, uint16_t in_packet_size, unsigned char *out_packet, uint16_t *out_packet_size);
+int deoptimize(hashtable as, unsigned char *input_packet_ptr, uint16_t input_packet_size, unsigned char *regenerated_packet, uint16_t *output_packet_size);
+int cache(hashtable ht, unsigned char *packet_ptr, uint16_t packet_size);
 #endif /* SOLOWAN_H_ */

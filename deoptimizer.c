@@ -33,9 +33,11 @@
 #include "include/hashtable.h"
 #include "include/inout.h"
 #include "include/solowan.h"
+#include "include/solowan_rolling.h"
 
+#define BASIC
+//#define ROLLING
 #define MIN_REQUIRED 3
-
 #define WANMETAMESSAGE "wan_message.meta"
 #define WANMESSAGE "wan_message"
 #define OUTPUTFILE "outputfile"
@@ -44,16 +46,16 @@
 
 int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 
-	char *mmap;
-	char *packet_ptr;
-	size_t size = 0;
+	unsigned char *mmap;
+	unsigned char *packet_ptr;
+	uint16_t size = 0;
 	uint16_t input_packet_size=0;
 	FILE *wan_metamessage, *outputfile;
 	char *outputname = NULL;
 	char filename[200], tmp[210];
 	int session, compressed;
-	char regenerated_packet[BUFFER_SIZE];
-	size_t regenerated_packet_size;
+	unsigned char regenerated_packet[BUFFER_SIZE];
+	uint16_t regenerated_packet_size;
 	int i;
 
 	/*
@@ -78,7 +80,13 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 	// This loop read line by line the metadata file
 	while ( fscanf(wan_metamessage, "%s %hu %d %d\n", filename, &input_packet_size, &session, &compressed) != EOF ){ /* Read a line with packet specification*/
 		if(compressed){
+#ifdef BASIC
 			deoptimize(as, packet_ptr, input_packet_size, regenerated_packet, &regenerated_packet_size);
+#endif
+
+#ifdef ROLLING
+			uncomp(regenerated_packet, &regenerated_packet_size, packet_ptr, input_packet_size);
+#endif
 			sprintf(tmp, "%s.%d", filename, session);// Output file name depends on session
 			outputfile = fopen(tmp, "a+");
 			if(!outputfile){
@@ -89,7 +97,15 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 			packet_ptr += input_packet_size;
 			fclose(outputfile);
 		}else{
+
+#ifdef BASIC
 			cache(as, packet_ptr, input_packet_size);
+#endif
+
+#ifdef ROLLING
+			update_caches(packet_ptr,input_packet_size);
+#endif
+
 			sprintf(tmp, "%s.%d", filename, session);// Output file name depends on session
 			outputfile = fopen(tmp, "a+");
 			if(!outputfile){
@@ -127,6 +143,8 @@ int main (int argc, char ** argv){
 		return help();
 	}
 
+#ifdef BASIC
+	// Create a table of NREG positions: library 01dedup.h
 	i = create_hashmap(&as_deoptimizer);
 	if(i){
 		printf("Table created \n");
@@ -134,6 +152,13 @@ int main (int argc, char ** argv){
 		printf("Error creating table: EXIT! \n");
 		exit(1);
 	}
+#endif
+
+#ifdef ROLLING
+	init_dedup();
+	init_uncomp();
+#endif
+
 	while (1)
 	{
 		static struct option long_options[] =
@@ -223,12 +248,15 @@ int main (int argc, char ** argv){
 
 	run_deoptimization(files[0], metafilename, as_deoptimizer); // We handle just one metadata file
 
+#ifdef BASIC
 	i = remove_table(as_deoptimizer);
 	if(i==0){
 		printf("Error deleting table!!");
 	}else{
 		printf("\nTable deleted.\n");
 	}
+#endif
+
 
 	return 0;
 }

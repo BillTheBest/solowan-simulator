@@ -33,10 +33,10 @@
 
 #define SEED 42
 
-int optimize(hashtable ht, char *in_packet, size_t in_packet_size, char *out_packet, size_t *out_packet_size){
-	char *block_ptr;
-	char buffer[BUFFER_SIZE*2];
-	size_t readed, remaining; // Number of read bytes in a packet
+int optimize(hashtable ht, unsigned char *in_packet, uint16_t in_packet_size, unsigned char *out_packet, uint16_t *out_packet_size){
+	unsigned char *block_ptr;
+	unsigned char buffer[BUFFER_SIZE*2];
+	uint16_t readed, remaining; // Number of read bytes in a packet
 	hashptr *hashpointer, *tail_hash;
 	uint32_t hash;
 	int i;
@@ -44,7 +44,7 @@ int optimize(hashtable ht, char *in_packet, size_t in_packet_size, char *out_pac
 	block_ptr = in_packet;
 	readed =0; // Number of read bytes in a packet
 	*out_packet_size=0; // New packet size
-	size_t buffer_size = 0;
+	uint16_t buffer_size = 0;
 	hashptr *hash_head = NULL;
 	uint16_t number_of_hashes = 0;
 
@@ -100,7 +100,7 @@ int optimize(hashtable ht, char *in_packet, size_t in_packet_size, char *out_pac
 	}
 
 	hashptr *tmp;
-	size_t writed = 0;
+	uint16_t writed = 0;
 
 	// Write the packet header
 	if(number_of_hashes != 0){
@@ -123,17 +123,17 @@ int optimize(hashtable ht, char *in_packet, size_t in_packet_size, char *out_pac
 	return 0;
 }
 
-int deoptimize(hashtable as, char *input_packet_ptr, size_t input_packet_size, char *regenerated_packet, size_t *output_packet_size){
+int deoptimize(hashtable as, unsigned char *input_packet_ptr, uint16_t input_packet_size, unsigned char *regenerated_packet, uint16_t *output_packet_size){
 	int i = 0;
 	uint16_t n_hashes;
 	uint16_t hash_position;
-	char *data;
+	unsigned char *data;
 	uint16_t k;
 	uint16_t handled = 0, remaining = 0;
-	char received_chunk[CHUNK];
+	unsigned char received_chunk[CHUNK];
 	uint32_t hash_ptr, hash;
-	char *floating_ptr;
-	size_t data_size = input_packet_size;
+	unsigned char *floating_ptr;
+	uint16_t data_size = input_packet_size;
 
 	floating_ptr = input_packet_ptr; // The floating_ptr points to the beginning of the packet
 	memcpy(&n_hashes, floating_ptr, sizeof(uint16_t)); // Copy the number of hashes in the packet
@@ -206,9 +206,9 @@ int deoptimize(hashtable as, char *input_packet_ptr, size_t input_packet_size, c
 }
 
 
-int cache(hashtable ht, char *packet_ptr, size_t packet_size){
-	char *block_ptr;
-	size_t readed; // Number of read bytes in a packet
+int cache(hashtable ht, unsigned char *packet_ptr, uint16_t packet_size){
+	unsigned char *block_ptr;
+	uint16_t readed; // Number of read bytes in a packet
 	uint32_t hash;
 	int i;
 

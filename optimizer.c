@@ -34,6 +34,8 @@
 #include "include/solowan.h"
 #include "include/solowan_rolling.h"
 
+#define BASIC
+//#define ROLLING
 #define MIN_REQUIRED 2
 #define NUMBER_OF_STRINGS 255
 #define STRING_LENGTH 255
@@ -41,15 +43,15 @@
 #define WANMESSAGE "wan_message"
 
 int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_file_name, int session){
-	char *mmap;
-	char *in_packet;
-	size_t size = 0;
-	size_t writed = 0; // Statistics: output file size
-	size_t out_packet_size = 0;
-	size_t in_packet_size = BUFFER_SIZE;
-	unsigned long int count = 0; 	//The number of bytes we already read in the file
+	unsigned char *mmap;
+	unsigned char *in_packet;
+	uint16_t size = 0;
+	uint16_t writed = 0; // Statistics: output file size
+	uint16_t out_packet_size = 0;
+	uint16_t in_packet_size = BUFFER_SIZE;
+	uint16_t count = 0; 	//The number of bytes we already read in the file
 	FILE *wan_message, *wan_metamessage, *stats;
-	char out_packet[BUFFER_SIZE*2];
+	unsigned char out_packet[BUFFER_SIZE*2];
 	int i = 0;
 	int compressed = 0;
 	char *wanmessage;
@@ -93,8 +95,14 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 	while(size - count > in_packet_size){// LOOP OVER PACKETS
 		// We have a packet: we need to split it in chunks and cache it
 		in_packet = mmap + count; // Pointer to the beginning of the packet
+
+#ifdef BASIC
 		optimize(as,  in_packet, in_packet_size, out_packet, &out_packet_size);
-//		dedup(in_packet, in_packet_size, out_packet, &out_packet_size);
+#endif
+
+#ifdef ROLLING
+		dedup(in_packet, in_packet_size, out_packet, &out_packet_size);
+#endif
 		compressed = out_packet_size < in_packet_size;
 		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
 		count += in_packet_size; // Increment count of a packet size
@@ -103,9 +111,14 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 	// Handle the rest of the file
 	//	memcpy(out_packet, mmap + count, size - count);
 	if(size - count > 0){
+#ifdef BASIC
 		optimize(as,  mmap + count, size - count, out_packet, &out_packet_size);
+#endif
+
+#ifdef ROLLING
+		dedup(mmap + count, size - count, out_packet, &out_packet_size);
+#endif
 		compressed = out_packet_size < size - count;
-//		dedup(mmap + count, size - count, out_packet, &out_packet_size);
 		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
 	}
 
@@ -134,7 +147,7 @@ int main (int argc, char ** argv){
 	FILE *outputfile = NULL, *metaoutputfile = NULL;
 	char statistics[100] = "";
 	char files[NUMBER_OF_STRINGS][STRING_LENGTH]; /* files to read */
-//	char file[STRING_LENGTH]; /* files to read */
+	//	char file[STRING_LENGTH]; /* files to read */
 	int numfiles = 0;
 	char *output = NULL;
 	char metaoutput[105];
@@ -143,7 +156,7 @@ int main (int argc, char ** argv){
 	if (argc < MIN_REQUIRED) {
 		return help();
 	}
-
+#ifdef BASIC
 	// Create a table of NREG positions: library 01dedup.h
 	i = create_hashmap(&as_optimizer);
 	if(i){
@@ -152,9 +165,11 @@ int main (int argc, char ** argv){
 		printf("Error creating table: EXIT! \n");
 		exit(1);
 	}
-
+#endif
+#ifdef ROLLING
 	init_dedup();
 	init_uncomp();
+#endif
 
 	while (1)
 	{
@@ -250,16 +265,16 @@ int main (int argc, char ** argv){
 		strcpy(statistics, "statistics.csv");
 	}
 
-//	// Removing header between transmissions
-//	stats = fopen(statistics, "r");
-//	if(!stats){
-//		stats = fopen(statistics, "w");
-//		fprintf(stats,"File\tRead\tWrite\n");
-//		fclose(stats);
-//	}else{
-//		fclose(stats);
-//	}
-//
+	//	// Removing header between transmissions
+	//	stats = fopen(statistics, "r");
+	//	if(!stats){
+	//		stats = fopen(statistics, "w");
+	//		fprintf(stats,"File\tRead\tWrite\n");
+	//		fclose(stats);
+	//	}else{
+	//		fclose(stats);
+	//	}
+	//
 	stats = fopen(statistics, "a+");
 	if(!stats){
 		printf("Error opening file.\n");
@@ -292,12 +307,14 @@ int main (int argc, char ** argv){
 	}
 
 	free(output);
+
+#ifdef BASIC
 	i = remove_table(as_optimizer);
 	if(i==0){
 		printf("Error deleting table!!");
 	}else{
 		printf("\nTable deleted.\n");
 	}
-
+#endif
 	return 0;
 }
