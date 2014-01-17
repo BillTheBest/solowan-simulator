@@ -2,12 +2,12 @@ CC = gcc
 OUT_EXE1 = optimizer
 OUT_EXE2 = deoptimizer
 CFLAGS = -g -Wall
-SRC = optimizer.c include/dedup01.c include/dedup01.h\
-	include/as.c include/as.h include/dedup02.c include/dedup02.h\
+SRC = optimizer.c include/hashtable.c include/hashtable.h\
+	include/as.c include/as.h include/solowan_rolling.c include/solowan_rolling.h\
 	include/inout.c include/inout.h\
 	include/murmurhash.c include/murmurhash.h include/solowan.c\
 	include/solowan.h include/uncomp.c
-OBJ = include/dedup01.o include/as.o include/dedup02.o\
+OBJ = include/hashtable.o include/as.o include/solowan_rolling.o\
 	 include/inout.o include/murmurhash.o include/solowan.o
 OBJ_OPTIM = optimizer.o $(OBJ)
 OBJ_DEOPTIM = deoptimizer.o $(OBJ)

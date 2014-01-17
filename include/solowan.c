@@ -27,7 +27,7 @@
 #include <assert.h>
 #include <limits.h>
 #include "murmurhash.h"
-#include "dedup01.h"
+#include "hashtable.h"
 #include "inout.h"
 #include "solowan.h"
 
