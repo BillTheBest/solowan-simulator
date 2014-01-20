@@ -16,6 +16,10 @@
 *.exe
 *.out
 *.app
+*.out
+*.meta
+optimizer
+deoptimizer
 
 #Statistics
 *.csv
@@ -24,3 +28,4 @@
 #Eclipse
 .cproject
 .project
+.settings
