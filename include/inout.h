@@ -29,5 +29,6 @@ typedef struct hashptr{
 int read_structuredfile( char *datafilename, unsigned char **map, size_t *size);
 int dump_packet(unsigned char *buffer, hashptr *hashlist,  uint16_t new_size, uint16_t number_of_hashes, FILE * metadatafile, FILE *outputfile, char *originfilename, int session);
 int dump(unsigned char *out_packet, uint16_t out_size, FILE * metadatafile, FILE *outputfile, char *originfilename, int session, int compressed);
-int help();
+int help_optimizer();
+int help_deoptimizer();
 #endif /* INOUT_H_ */

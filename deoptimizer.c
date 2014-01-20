@@ -142,7 +142,7 @@ int main (int argc, char ** argv){
 	char metafilename[100];
 
 	if (argc < MIN_REQUIRED) {
-		return help();
+		return help_deoptimizer();
 	}
 
 #ifdef BASIC

@@ -159,7 +159,7 @@ int main (int argc, char ** argv){
 	int repeated = 1, session = 0;
 
 	if (argc < MIN_REQUIRED) {
-		return help();
+		return help_optimizer();
 	}
 #ifdef BASIC
 	// Create a table of NREG positions: library 01dedup.h
