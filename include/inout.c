@@ -65,16 +65,10 @@ int read_structuredfile( char *datafilename, unsigned char **map, size_t *size){
 	*map = (unsigned char *)mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, datafile, 0);
 
 	check(*map == MAP_FAILED, "mmap input file failed: %s", strerror (errno));
-//	if (*map == (caddr_t) -1){
-//		printf ("mmap error for input");
-//		exit(0);
-//	}
 
 	*size = statbuf.st_size;
 	return 1;
 }
-
-
 
 //int writestructuredfile( char *datafilename, char *metafilename, packet *head ){
 //	FILE * datafile;
@@ -115,7 +109,18 @@ int dump(unsigned char *out_packet, uint16_t out_size, FILE * metadatafile, FILE
 	return out_size;
 }
 
-int help() {
-	printf("Usage: ./optimizer FILE1 FILE2\n");
+int help_optimizer() {
+	printf("Usage: ./optimizer -f file_name [-f ...] [options]\n");
+	printf("OPTIONS:\n");
+	printf("-r <number> - Number of transmissions (Default 1)\n");
+	printf("-o <filename> - Output file name (Default wan.out)\n");
+	printf("-s <filename> - Statistics file name (Default stat.csv\n");
+	return 1;
+}
+
+int help_deoptimizer() {
+	printf("Usage: ./deoptimizer -f file_name [options]\n");
+	printf("OPTIONS:\n");
+	printf("-m <filename> - Metadata file name\n");
 	return 1;
 }
