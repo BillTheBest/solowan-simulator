@@ -16,6 +16,9 @@
 *.exe
 *.out
 *.app
+*.meta
+optimizer
+deoptimizer
 
 #Statistics
 *.csv
