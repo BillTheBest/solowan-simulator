@@ -78,7 +78,9 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 	packet_ptr = mmap;
 
 	// This loop read line by line the metadata file
-	while ( fscanf(wan_metamessage, "%s %hu %d %d\n", filename, &input_packet_size, &session, &compressed) != EOF ){ /* Read a line with packet specification*/
+	int ips;
+	while ( fscanf(wan_metamessage, "%s %hu %d %d\n", filename, &ips, &session, &compressed) != EOF ){ /* Read a line with packet specification*/
+		input_packet_size = (uint16_t) ips;
 		if(compressed){
 #ifdef BASIC
 			deoptimize(as, packet_ptr, input_packet_size, regenerated_packet, &regenerated_packet_size);
@@ -155,7 +157,6 @@ int main (int argc, char ** argv){
 #endif
 
 #ifdef ROLLING
-	init_dedup();
 	init_uncomp();
 #endif
 

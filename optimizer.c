@@ -104,7 +104,10 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 		dedup(in_packet, in_packet_size, out_packet, &out_packet_size);
 #endif
 		compressed = out_packet_size < in_packet_size;
-		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
+		if (compressed)
+			writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
+		else
+			writed += dump(in_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
 		count += in_packet_size; // Increment count of a packet size
 	} /* END LOOP OVER PACKETS */
 
@@ -119,7 +122,10 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 		dedup(mmap + count, size - count, out_packet, &out_packet_size);
 #endif
 		compressed = out_packet_size < size - count;
-		writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
+		if (compressed)
+			writed += dump(out_packet, out_packet_size, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
+		else
+			writed += dump(mmap + count, size - count, wan_metamessage, wan_message, inputfile, session, compressed); // Write the packet to file
 	}
 
 	fprintf(stats,"%s\t%lu\t%lu\n", inputfile, size, writed);
@@ -168,7 +174,6 @@ int main (int argc, char ** argv){
 #endif
 #ifdef ROLLING
 	init_dedup();
-	init_uncomp();
 #endif
 
 	while (1)
