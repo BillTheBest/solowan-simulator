@@ -45,11 +45,11 @@
 int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_file_name, int session){
 	unsigned char *mmap;
 	unsigned char *in_packet;
-	uint16_t size = 0;
-	uint16_t writed = 0; // Statistics: output file size
+	size_t size = 0;
+	size_t writed = 0; // Statistics: output file size
 	uint16_t out_packet_size = 0;
 	uint16_t in_packet_size = BUFFER_SIZE;
-	uint16_t count = 0; 	//The number of bytes we already read in the file
+	size_t count = 0; 	//The number of bytes we already read in the file
 	FILE *wan_message, *wan_metamessage, *stats;
 	unsigned char out_packet[BUFFER_SIZE*2];
 	int i = 0;

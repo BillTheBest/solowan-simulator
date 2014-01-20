@@ -48,7 +48,7 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 
 	unsigned char *mmap;
 	unsigned char *packet_ptr;
-	uint16_t size = 0;
+	size_t size = 0;
 	uint16_t input_packet_size=0;
 	FILE *wan_metamessage, *outputfile;
 	char *outputname = NULL;
