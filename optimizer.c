@@ -34,8 +34,8 @@
 #include "include/solowan.h"
 #include "include/solowan_rolling.h"
 
-#define BASIC
-//#define ROLLING
+//#define BASIC
+#define ROLLING
 #define MIN_REQUIRED 2
 #define NUMBER_OF_STRINGS 255
 #define STRING_LENGTH 255
@@ -141,7 +141,7 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 }
 
 int main (int argc, char ** argv){
-	as as_optimizer;
+	hashtable as_optimizer = NULL;
 	int i, c, j;
 	FILE *stats = NULL;
 	FILE *outputfile = NULL, *metaoutputfile = NULL;

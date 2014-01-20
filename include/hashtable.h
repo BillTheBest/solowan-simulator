@@ -58,7 +58,7 @@ int check(hashtable *as, uint32_t hash);
  * If the chunk exists, the content is put in the retrieved_chunk buffer
  *
  * */
-int put_block(hashtable *as, char *buffer, uint32_t hash);
+int put_block(hashtable *as, unsigned char *buffer, uint32_t hash);
 
 /*
  * Regenerate function: it checks the presence of a chunk in the
@@ -70,9 +70,9 @@ int put_block(hashtable *as, char *buffer, uint32_t hash);
  * If the chunk exists, the content is put in the retrieved_chunk buffer
  *
  * */
-int get_block(uint32_t hash, hashtable *as, char *retrieved_chunk);
+int get_block(uint32_t hash, hashtable *as, unsigned char *retrieved_chunk);
 
-int check_collision(hashtable *as, char *block_ptr, uint32_t hash);
+int check_collision(hashtable *as, unsigned char *block_ptr, uint32_t hash);
 
 int remove_table(hashtable as);
 

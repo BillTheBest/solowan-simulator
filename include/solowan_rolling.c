@@ -124,7 +124,7 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	int i;
 	uint32_t hash;
 	FPEntry *fpp;
-	static int printed = 0;
+//	static int printed = 0;
 
 	DBG(("Entrando en dedup pktlen %d\n",pktlen));
 	DBG(("Estado: pktId %" PRIu64 "\n",pktId));
@@ -189,7 +189,7 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	fprintf(fpdebug,"pktId: %" PRIu64 " ",pktId);
 #endif
 
-	int orig, dest, base;
+	int orig, dest;
 	void *poffsetFPD, *pliml, *plimr;
 	void *poffsetFP;
 	poffsetFPD = (void *) optpkt;

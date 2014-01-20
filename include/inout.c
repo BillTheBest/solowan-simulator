@@ -26,11 +26,27 @@
 #include <sys/stat.h>
 #include <sys/mman.h> /* mmap() is defined in this header */
 #include <fcntl.h>
-
+#include <errno.h>
+#include <string.h>
+#include <stdarg.h>
+#include <fcntl.h>
+#include <ctype.h>
 #include "inout.h"
 
+static void check (int test, const char * message, ...)
+{
+    if (test) {
+        va_list args;
+        va_start (args, message);
+        vfprintf (stderr, message, args);
+        va_end (args);
+        fprintf (stderr, "\n");
+        exit (EXIT_FAILURE);
+    }
+}
+
 int read_structuredfile( char *datafilename, unsigned char **map, size_t *size){
-	FILE * datafile;
+	int datafile;
 	struct stat statbuf;
 
 	/* open the input file */
@@ -45,13 +61,14 @@ int read_structuredfile( char *datafilename, unsigned char **map, size_t *size){
 		exit(0);
 	}
 
-
-	*map = (unsigned char *)mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, datafile, 0);
 	/* mmap the input file */
-	if (*map == (caddr_t) -1){
-		printf ("mmap error for input");
-		exit(0);
-	}
+	*map = (unsigned char *)mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, datafile, 0);
+
+	check(*map == MAP_FAILED, "mmap input file failed: %s", strerror (errno));
+//	if (*map == (caddr_t) -1){
+//		printf ("mmap error for input");
+//		exit(0);
+//	}
 
 	*size = statbuf.st_size;
 	return 1;
@@ -59,18 +76,18 @@ int read_structuredfile( char *datafilename, unsigned char **map, size_t *size){
 
 
 
-int writestructuredfile( char *datafilename, char *metafilename, packet *head ){
-	FILE * datafile;
-	struct stat statbuf;
-	char *map;
+//int writestructuredfile( char *datafilename, char *metafilename, packet *head ){
+//	FILE * datafile;
+//	struct stat;
+//	char *map;
+//
+//	if ((datafile = open (datafilename, O_RDONLY)) < 0)
+//		printf ("can't open %s for reading", datafilename);
+//
+//	return 0;
+//}
 
-	if ((datafile = open (datafilename, O_RDONLY)) < 0)
-		printf ("can't open %s for reading", datafilename);
-
-	return 0;
-}
-
-int dump_packet(char *buffer, hashptr *hashlist, uint16_t new_size, uint16_t number_of_hashes, FILE * metadatafile, FILE *outputfile, char *originfilename, int session){
+int dump_packet(unsigned char *buffer, hashptr *hashlist, uint16_t new_size, uint16_t number_of_hashes, FILE * metadatafile, FILE *outputfile, char *originfilename, int session){
 	hashptr *tmp;
 	int writed = 0;
 
@@ -87,12 +104,11 @@ int dump_packet(char *buffer, hashptr *hashlist, uint16_t new_size, uint16_t num
 	// Write the metadata with packet size
 	fwrite(buffer,new_size,1,outputfile);
 	writed += new_size;
-	fprintf(metadatafile, "%s\t%u\t%d\n", originfilename, new_size + sizeof(uint16_t) + (number_of_hashes * sizeof(uint16_t)), session);
+	fprintf(metadatafile, "%s\t%lu\t%d\n", originfilename, new_size + sizeof(uint16_t) + (number_of_hashes * sizeof(uint16_t)), session);
 	return writed;
 }
 
-int dump(char *out_packet, uint16_t out_size, FILE * metadatafile, FILE *outputfile, char *originfilename, int session, int compressed){
-	hashptr *tmp;
+int dump(unsigned char *out_packet, uint16_t out_size, FILE * metadatafile, FILE *outputfile, char *originfilename, int session, int compressed){
 	// Write the metadata with packet size
 	fwrite(out_packet, out_size, 1, outputfile);
 	fprintf(metadatafile, "%s\t%u\t%d\t%d\n", originfilename, out_size, session, compressed);

@@ -56,7 +56,7 @@ int check(hashtable *as, uint32_t hash){
  * If the chunk exists, the content is put in the retrieved_chunk buffer
  *
  * */
-int put_block(hashtable *as, char *buffer, uint32_t hash){
+int put_block(hashtable *as, unsigned char *buffer, uint32_t hash){
 	int i;
 	// Insert buffer in the hash table using the normalized "hash" variable as key
 	// We normalize the key according o the table size
@@ -80,7 +80,7 @@ int put_block(hashtable *as, char *buffer, uint32_t hash){
  * If the chunk exists, the content is put in the retrieved_chunk buffer
  *
  * */
-int get_block(uint32_t hash, hashtable *as, char *retrieved_chunk){
+int get_block(uint32_t hash, hashtable *as, unsigned char *retrieved_chunk){
 //	int i;
 //	printf("\nHash:%u\n",hash);
 //	printf("Hashed retrieved from message:%u\n", hash);
@@ -101,7 +101,7 @@ int get_block(uint32_t hash, hashtable *as, char *retrieved_chunk){
 //	}
 }
 
-int check_collision(hashtable *as, char *block_ptr, uint32_t hash){
+int check_collision(hashtable *as, unsigned char *block_ptr, uint32_t hash){
 	int i;
 	char ptr[CHUNK];
 

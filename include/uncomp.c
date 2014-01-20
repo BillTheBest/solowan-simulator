@@ -157,8 +157,8 @@ void update_caches(unsigned char *packet, uint16_t pktlen) {
 void uncomp(unsigned char *packet, uint16_t *pktlen, unsigned char *optpkt, uint16_t optlen) {
 
    uint64_t tentativeFP;
-   int fpNum = 0;
-   int i;
+//   int fpNum = 0;
+//   int i;
    uint32_t hash;
    uint16_t offset;
    uint16_t orig = 0;

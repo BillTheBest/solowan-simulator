@@ -35,8 +35,8 @@
 #include "include/solowan.h"
 #include "include/solowan_rolling.h"
 
-#define BASIC
-//#define ROLLING
+//#define BASIC
+#define ROLLING
 #define MIN_REQUIRED 3
 #define WANMETAMESSAGE "wan_message.meta"
 #define WANMESSAGE "wan_message"
@@ -132,7 +132,7 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 
 int main (int argc, char ** argv){
 	int verbose = 0;
-	hashtable as_deoptimizer;
+	hashtable as_deoptimizer = NULL;
 	int i, c;
 	char files[NUMBER_OF_STRINGS][STRING_LENGTH]; /* files to read */
 	//	char file[STRING_LENGTH]; /* files to read */
