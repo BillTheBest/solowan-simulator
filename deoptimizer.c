@@ -79,7 +79,7 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 
 	// This loop read line by line the metadata file
 	int ips;
-	while ( fscanf(wan_metamessage, "%s %hu %d %d\n", filename, &ips, &session, &compressed) != EOF ){ /* Read a line with packet specification*/
+	while ( fscanf(wan_metamessage, "%s %d %d %d\n", filename, &ips, &session, &compressed) != EOF ){ /* Read a line with packet specification*/
 		input_packet_size = (uint16_t) ips;
 		if(compressed){
 #ifdef BASIC

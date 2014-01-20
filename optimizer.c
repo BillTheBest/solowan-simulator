@@ -112,7 +112,6 @@ int run_optimization( char *inputfile, as as, char *outputfilename, char *stats_
 	} /* END LOOP OVER PACKETS */
 
 	// Handle the rest of the file
-	//	memcpy(out_packet, mmap + count, size - count);
 	if(size - count > 0){
 #ifdef BASIC
 		optimize(as,  mmap + count, size - count, out_packet, &out_packet_size);
