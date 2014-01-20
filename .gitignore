@@ -1,0 +1,31 @@
+# Object files
+*.o
+*.ko
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.out
+*.meta
+optimizer
+deoptimizer
+
+#Statistics
+*.csv
+*.txt
+
+#Eclipse
+.cproject
+.project
+.settings
