@@ -171,6 +171,7 @@ int main (int argc, char ** argv){
 		exit(1);
 	}
 #endif
+
 #ifdef ROLLING
 	init_dedup();
 #endif
@@ -320,5 +321,6 @@ int main (int argc, char ** argv){
 		printf("\nTable deleted.\n");
 	}
 #endif
+
 	return 0;
 }

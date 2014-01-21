@@ -129,10 +129,10 @@ int deoptimize(hashtable as, unsigned char *input_packet_ptr, uint16_t input_pac
 	uint16_t hash_position;
 	unsigned char *data;
 	uint16_t k;
-	uint16_t handled = 0, remaining = 0;
 	unsigned char received_chunk[CHUNK];
 	uint32_t hash_ptr, hash;
 	unsigned char *floating_ptr;
+	uint16_t handled = 0, remaining = 0;
 	uint16_t data_size = input_packet_size;
 
 	floating_ptr = input_packet_ptr; // The floating_ptr points to the beginning of the packet
@@ -219,15 +219,9 @@ int cache(hashtable ht, unsigned char *packet_ptr, uint16_t packet_size){
 		readed += CHUNK;
 		hash = MurmurHash2(block_ptr, CHUNK, SEED); // Calculate the hash
 		// Check if the data is already present
-		if(check(ht,hash)){// If the chunk exists
-//			printf("Chunk already exists!!!!!!!!!!!!!!!!!!!!!!!\n");
-//			// Check if it is a collision
-//			if(!check_collision(ht, block_ptr, hash)){ // It's a collision
-//				// Don't save the block and write the original message
-//			} // else no collision no need to cahce
-		}else{ // The chunk does not exists
+		if(!check(ht,hash)){// If the chunk does not exists
 			i = put_block(ht, block_ptr, hash); // Store the block
-//			printf("Chunk cached!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+			//printf("Chunk cached!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 			if (!i){
 				printf("ERROR: Caching.");
 				exit(1);
