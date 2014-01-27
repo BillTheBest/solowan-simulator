@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "solowan_rolling.h"
+#include "MurmurHash3.h"
 
 #ifdef DEBUG
 #define DBG(x) printf x
@@ -38,6 +39,7 @@
 static FPStore fps;
 static PStore ps;
 
+#define SEED 0x8BADF00D
 #define BYTE_RANGE 256
 // Auxiliary table for calculating fingerprints
 static uint64_t fpfactors[BYTE_RANGE][BETA];
@@ -46,6 +48,13 @@ static uint64_t fpfactors[BYTE_RANGE][BETA];
 static uint64_t pktId = 1; // 0 means empty FPEntry
 
 void hton16(unsigned char *p, uint16_t n) {
+	*p++ = (n >> 8) & 0xff;
+	*p = n & 0xff;
+}
+
+void hton32(unsigned char *p, uint32_t n) {
+	*p++ = (n >> 24) & 0xff;
+	*p++ = (n >> 16) & 0xff;
 	*p++ = (n >> 8) & 0xff;
 	*p = n & 0xff;
 }
@@ -126,6 +135,8 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	FPEntry *fpp;
 //	static int printed = 0;
 
+	uint32_t computedPacketHash;
+
 	DBG(("Entrando en dedup pktlen %d\n",pktlen));
 	DBG(("Estado: pktId %" PRIu64 "\n",pktId));
 
@@ -143,11 +154,13 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	}
 
 	// Store packet in PS
-	// PENDING: What if already in PS (rtx, identical content) ?
+
+	MurmurHash3_x86_32  (packet, pktlen, SEED, (void *) &computedPacketHash );
 	uint32_t pktIdx = (uint32_t) (pktId % PKT_STORE_SIZE);
 	DBG(("Estado: pktIdx %" PRIu32 "\n",pktIdx));
 	memcpy(ps[pktIdx].pkt,packet,pktlen);
 	ps[pktIdx].len = pktlen;
+	ps[pktIdx].hash = computedPacketHash;
 
 	// Calculate initial fingerprint
 	pktFps[0].fp = full_rfp(packet);
@@ -179,6 +192,7 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	// Compressed data: byte sequence of uncompressed chunks (variable length) and interleaved FP descriptors
 	// FP descriptors pointed by the header, fixed format and length:
 	//     64 bit FP (network order)
+	//     32 bit packet hash (network order)
 	//     16 bit left limit (network order)
 	//     16 bit right limit (network order)
 	//     16 bit offset from end of this header to next FP descriptor (if all ones, no more descriptors)
@@ -191,7 +205,7 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 
 	int orig, dest;
 	void *poffsetFPD, *pliml, *plimr;
-	void *poffsetFP;
+	void *poffsetFP, *poffsetPktHash;
 	poffsetFPD = (void *) optpkt;
 	orig = 0;
 	dest = sizeof(uint16_t);
@@ -253,6 +267,15 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 #endif
 
 					dest += sizeof(uint64_t);
+
+					poffsetPktHash = (void *) optpkt+dest;
+					hton32(poffsetPktHash, computedPacketHash);
+#ifdef DEBUG
+					fprintf(fpdebug,"hash %d ",computedPacketHash);
+#endif
+
+					dest += sizeof(uint32_t);
+
 					pliml = (void *) optpkt+dest;
 
 #ifdef DEBUG
@@ -310,6 +333,7 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	fprintf(fpdebug,"\n");
 	fclose(fpdebug);
 #endif
+	
 
 	for (i=0; i<fpNum; i++) {
 		hash = hashFPStore(pktFps[i].fp);
@@ -332,4 +356,35 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	assert (*optlen <= MAX_PKT_SIZE);
 	assert (orig <= MAX_PKT_SIZE);
 	DBG(("Saliendo de dedup pktlen %d optlen %d\n",pktlen,*optlen));
+}
+
+// Recovery function
+// Input parameter: fp (uint64_t holding the fingerpint)
+// Input parameter: hash (uint32_t holding the hash)
+// Output parameter: recpkt (pointer to array of unsigned char where recovered content should be copied, if found. VERY IMPORTANT: THE CALLER MUST ALLOCATE THIS ARRAY.
+// Output parameter: reclen (pointer to uint16_t where length of recovered content is returned
+// VERY IMPORTANT: IF RECLEN IS 0, NO CONTENT HAS BEEN RECOVERED 
+void recover(uint64_t fp, uint32_t hash, unsigned char *recpkt, uint16_t *reclen) {
+	FPEntry fpe;
+	uint32_t hashfp;
+	uint64_t pid;
+	hashfp = hashFPStore(fp);
+	fpe = fps[hashfp];
+ 	if ((pktId >= PKT_STORE_SIZE) && (fpe.pktId < pktId - PKT_STORE_SIZE)) {
+                        DBG(("Entrada obsoleta hash %" PRIu32 " pktId %" PRIu64 " fpp->pktId %" PRIu64 "\n",hash,pktId,fpp->pktId));
+                        fpe.pktId = 0;
+        }
+
+	if ((fpe.pktId == 0) || (fpe.fp != fp)) {
+		*reclen = 0;
+		return;
+	} else {
+		pid = fpe.pktId;
+	}
+	if (ps[pid % PKT_STORE_SIZE].hash == hash) {
+		*reclen = ps[pid].len;
+		memcpy(recpkt,ps[pid].pkt,ps[pid].len);
+	} else {
+		*reclen = 0;
+	}
 }
