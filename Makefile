@@ -1,7 +1,7 @@
 CC = gcc
 OUT_OPTIM = optimizer
 OUT_DEOPTIM = deoptimizer
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -Ofast
 SRC = optimizer.c include/hashtable.c include/hashtable.h\
 	include/as.c include/as.h include/solowan_rolling.c include/uncomp.c\
 	include/solowan_rolling.h include/inout.c include/inout.h\
