@@ -26,7 +26,7 @@
 #include <string.h>
 #include <assert.h>
 #include <limits.h>
-#include "murmurhash.h"
+#include "MurmurHash3.h"
 #include "hashtable.h"
 #include "inout.h"
 #include "solowan.h"
@@ -52,7 +52,7 @@ int optimize(hashtable ht, unsigned char *in_packet, uint16_t in_packet_size, un
 		hashpointer = NULL;
 		readed += CHUNK;
 		//hash = SuperFastHash (block_ptr, CHUNK); // Calculate the hash
-		hash = MurmurHash2(block_ptr, CHUNK, SEED);
+		MurmurHash3_x86_32(block_ptr, CHUNK, SEED, (void *) &hash);
 		// Check if the data is already present
 		if(check(ht,hash)){// If the chunk exists
 			// Check if it is a collision
@@ -151,7 +151,7 @@ int deoptimize(hashtable as, unsigned char *input_packet_ptr, uint16_t input_pac
 		while(hash_position - handled >= CHUNK){ // It means that there is enough data to be hashed and stored
 			//Store the chunk in the table
 			//			hash = SuperFastHash (data + handled, CHUNK); // Calculate the hash
-			hash = MurmurHash2(data + handled, CHUNK, SEED);
+			MurmurHash3_x86_32(data + handled, CHUNK, SEED, (void *) &hash);
 			if(check(as,hash)){// If the chunk exists
 				// Do nothing: chunk is not stored
 			}else{ // The chunk does not exist
@@ -182,7 +182,7 @@ int deoptimize(hashtable as, unsigned char *input_packet_ptr, uint16_t input_pac
 
 	while(data_size - handled >= CHUNK){ // LOOP OVER THE REST OF THE PACKET
 		//		hash = SuperFastHash (data + handled, CHUNK); // Calculate the hash
-		hash = MurmurHash2(data + handled, CHUNK, SEED);
+		MurmurHash3_x86_32(data + handled, CHUNK, SEED, (void *) &hash);
 		if(check(as,hash)){// If the chunk exists
 			// Do nothing: chunk is already present
 		}else{ // The chunk does not exist
@@ -217,7 +217,7 @@ int cache(hashtable ht, unsigned char *packet_ptr, uint16_t packet_size){
 
 	while(packet_size - readed >= CHUNK){ // LOOP OVER BLOCKS
 		readed += CHUNK;
-		hash = MurmurHash2(block_ptr, CHUNK, SEED); // Calculate the hash
+		MurmurHash3_x86_32(block_ptr, CHUNK, SEED, (void *) &hash); // Calculate the hash
 		// Check if the data is already present
 		if(!check(ht,hash)){// If the chunk does not exists
 			i = put_block(ht, block_ptr, hash); // Store the block

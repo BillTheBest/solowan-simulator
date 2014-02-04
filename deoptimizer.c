@@ -56,6 +56,7 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 	int session, compressed;
 	unsigned char regenerated_packet[BUFFER_SIZE];
 	uint16_t regenerated_packet_size;
+	UncompReturnStatus uncompStatus;
 	int i;
 
 	/*
@@ -87,7 +88,7 @@ int run_deoptimization(char *inputfile, char *inputmetafile, hashtable as){
 #endif
 
 #ifdef ROLLING
-			uncomp(regenerated_packet, &regenerated_packet_size, packet_ptr, input_packet_size);
+			uncomp(regenerated_packet, &regenerated_packet_size, packet_ptr, input_packet_size, &uncompStatus);
 #endif
 			sprintf(tmp, "%s.%d", filename, session);// Output file name depends on session
 			outputfile = fopen(tmp, "a+");

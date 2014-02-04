@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "solowan_rolling.h"
+#include "MurmurHash3.h"
 
 #ifdef DEBUG
 #define DBG(x) printf x
@@ -15,6 +16,7 @@
 static FPStore fps;
 static PStore ps;
 
+#define SEED 0x8BADF00D
 #define BYTE_RANGE 256
 // Auxiliary table for calculating fingerprints
 static uint64_t fpfactors[BYTE_RANGE][BETA];
@@ -25,6 +27,14 @@ static uint64_t pktId = 1; // 0 means empty FPEntry
 uint16_t ntoh16(unsigned char *p) {
         uint16_t res = *p++;
 	return (res << 8) + *p;
+}
+
+uint32_t ntoh32(unsigned char *p) {
+        uint32_t res = *p++;
+	res = (res << 8) + *p++;
+	res = (res << 8) + *p++;
+	res = (res << 8) + *p++;
+	return res;
 }
 
 uint64_t ntoh64(unsigned char *p) {
@@ -97,7 +107,7 @@ void update_caches(unsigned char *packet, uint16_t pktlen) {
    int exploring;
    int endLoop;
    int i;
-   uint32_t hash;
+   uint32_t hash, computedPacketHash;
    FPEntry *fpp;
 
    // Store packet in PS
@@ -106,7 +116,8 @@ void update_caches(unsigned char *packet, uint16_t pktlen) {
    DBG(("Estado: pktIdx %" PRIu32 "\n",pktIdx));
    memcpy(ps[pktIdx].pkt,packet,pktlen);
    ps[pktIdx].len = pktlen;
-
+   MurmurHash3_x86_32  (packet, pktlen, SEED, (void *) &computedPacketHash);
+   ps[pktIdx].hash = computedPacketHash;
 
    // Calculate initial fingerprint
    pktFps[0].fp = full_rfp(packet);
@@ -150,16 +161,24 @@ void update_caches(unsigned char *packet, uint16_t pktlen) {
   pktId++;
 }
 
-// uncomp takes an incoming compressed packet (optpkt, optlen), uncompresses it (packet, pktlen), and updates fingerprint pointers and packet cache
-// PENDING: behaviour when a compressed packet includes uncached fingerprints
-// PENDING: think of handling the same cache on both sides (merge with dedup.c)
+// Uncompress received optimized packet
+// Input parameter: optpkt (pointer to an array of unsigned char holding an optimized packet).
+// Input parameter: optlen (actual length of optimized packet -- 16 bit unsigned integer).
+// Output parameter: packet (pointer to an array of unsigned char holding the uncompressed packet). VERY IMPORTANT: THE CALLER MUST ALLOCATE THIS ARRAY
+// Output parameter: pktlen (actual length of uncompressed packet -- pointer to a 16 bit unsigned integer)
+// Output parameter: status (pointer to UncompReturnStatus, holding the return status of the call. Must be allocated by caller.)
+//                      status.code == UNCOMP_OK                packet successfully uncompressed, packet and pktlen output parameters updated
+//                      status.code == UNCOMP_FP_NOT_FOUND      packet unsuccessfully uncompressed due to a fingerprint not found or not matching stored hash
+//                                                              packet and pktlen not modified
+//                                                              status.fp and status.hash hold the missed values
+// This function also calls update_caches when the packet is successfully uncompressed, no need to call update_caches externally
 
-void uncomp(unsigned char *packet, uint16_t *pktlen, unsigned char *optpkt, uint16_t optlen) {
+extern void uncomp(unsigned char *packet, uint16_t *pktlen, unsigned char *optpkt, uint16_t optlen, UncompReturnStatus *status) {
+
 
    uint64_t tentativeFP;
-//   int fpNum = 0;
-//   int i;
    uint32_t hash;
+   uint32_t tentativePktHash;
    uint16_t offset;
    uint16_t orig = 0;
    FPEntry *fpp;
@@ -186,6 +205,7 @@ void uncomp(unsigned char *packet, uint16_t *pktlen, unsigned char *optpkt, uint
    // Compressed data: byte sequence of uncompressed chunks (variable length) and interleaved FP descriptors
    // FP descriptors pointed by the header, fixed format and length:
    //     64 bit FP (network order) 
+   //     32 bit packet hash (network order) 
    //     16 bit left limit (network order) 
    //     16 bit right limit (network order) 
    //     16 bit offset from end of this header to next FP descriptor (if all ones, no more descriptors)
@@ -214,11 +234,23 @@ void uncomp(unsigned char *packet, uint16_t *pktlen, unsigned char *optpkt, uint
      optpkt += sizeof(uint64_t);
      optlen -= sizeof(uint64_t);
 
+     tentativePktHash = ntoh32(optpkt);
+#ifdef DEBUG
+     fprintf(fpdebug,"hash %d ",tentativePktHash);
+#endif
+     optpkt += sizeof(uint32_t);
+     optlen -= sizeof(uint32_t);
+
      hash = hashFPStore(tentativeFP);
      fpp = &fps[hash];
-     // It MUST be the fingerprint, due to the way we encode
-     // PENDING check differences and handle errors
-     if (fpp->fp != tentativeFP) printf("HORROR HORROR HORROR stored %" PRIx64 " tentative %" PRIx64 "\n",fpp->fp, tentativeFP);
+
+     // if (fpp->fp != tentativeFP) printf("HORROR HORROR HORROR stored %" PRIx64 " tentative %" PRIx64 "\n",fpp->fp, tentativeFP);
+     if ((fpp->fp != tentativeFP) || (ps[fpp->pktId % PKT_STORE_SIZE].hash != tentativePktHash)) {
+	status->code = UNCOMP_FP_NOT_FOUND;
+	status->fp = tentativeFP;
+	status->hash = tentativePktHash;
+     }
+
 
      left = ntoh16(optpkt);
 #ifdef DEBUG
@@ -275,4 +307,5 @@ void uncomp(unsigned char *packet, uint16_t *pktlen, unsigned char *optpkt, uint
    assert(*pktlen <= MAX_PKT_SIZE); 
    assert(orig <= MAX_PKT_SIZE); 
    update_caches(packet,*pktlen); // At present this is extremely inefficient
+   status->code = UNCOMP_OK;
 }

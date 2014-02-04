@@ -108,6 +108,8 @@ typedef struct {
 	Pkt pkt;
 	// Actual packet length
         uint16_t len;
+	// Packet hash
+        uint32_t hash;
 } PktEntry;
 
 
@@ -116,17 +118,34 @@ typedef PktEntry PStore[PKT_STORE_SIZE];
 
 // Deduplication API (implemented in dedup.c)
 
+// Uncompression return
+#define	UNCOMP_OK		0
+#define	UNCOMP_FP_NOT_FOUND	1
+
+typedef struct {
+	unsigned char code;
+	uint64_t fp;
+	uint32_t hash;
+} UncompReturnStatus;
+
 // Initialization tasks
 extern void init_dedup(void);
 
 // De-duplication function
 // Input parameter: packet (pointer to an array of unsigned char holding the packet to be optimized)
 // Input parameter: pktlen (actual length of packet -- 16 bit unsigned integer)
-// Output parameter: optpkt (pointer to an array of unsigned char where the optimized packet contents are copied). VERY IMPORTANT: THE CALLER MUST ALLOCATE THIS ARRAY
+// Output parameter: optpkt (pointer to an array of unsigned char where the optimized packet contents are copied). VERY IMPORTANT: THE CALLER MUST ALLOCATE THIS ARRAY.
 // Output parameter: optlen (actual length of optimized packet -- pointer to a 16 bit unsigned integer). 
 // VERY IMPORTANT: IF OPTLEN IS THE SAME AS PKTLEN, NO OPTIMIZATION IS POSSIBLE AND OPTPKT HAS NO VALID CONTENTS
 extern void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16_t *optlen);
 
+// Recovery function
+// Input parameter: fp (uint64_t holding the fingerpint)
+// Input parameter: hash (uint32_t holding the hash)
+// Output parameter: recpkt (pointer to array of unsigned char where recovered content should be copied, if found. VERY IMPORTANT: THE CALLER MUST ALLOCATE THIS ARRAY.
+// Output parameter: reclen (pointer to uint16_t where length of recovered content is returned
+// VERY IMPORTANT: IF RECLEN IS 0, NO CONTENT HAS BEEN RECOVERED 
+extern void recover(uint64_t fp, uint32_t hash, unsigned char *recpkt, uint16_t *reclen);
 
 // Uncompression API (implemented in uncomp.c)
 
@@ -143,6 +162,11 @@ extern void update_caches(unsigned char *packet, uint16_t pktlen);
 // Input parameter: optlen (actual length of optimized packet -- 16 bit unsigned integer). 
 // Output parameter: packet (pointer to an array of unsigned char holding the uncompressed packet). VERY IMPORTANT: THE CALLER MUST ALLOCATE THIS ARRAY
 // Output parameter: pktlen (actual length of uncompressed packet -- pointer to a 16 bit unsigned integer)
-// This function also calls update_caches when the packet is uncompressed, no need to call update_caches externally
-extern void uncomp(unsigned char *packet, uint16_t *pktlen, unsigned char *optpkt, uint16_t optlen);
+// Output parameter: status (pointer to UncompReturnStatus, holding the return status of the call. Must be allocated by caller.)
+//			status.code == UNCOMP_OK		packet successfully uncompressed, packet and pktlen output parameters updated 
+//			status.code == UNCOMP_FP_NOT_FOUND	packet unsuccessfully uncompressed due to a fingerprint not found or not matching stored hash
+//								packet and pktlen not modified
+//								status.fp and status.hash hold the missed values
+// This function also calls update_caches when the packet is successfully uncompressed, no need to call update_caches externally
+extern void uncomp(unsigned char *packet, uint16_t *pktlen, unsigned char *optpkt, uint16_t optlen, UncompReturnStatus *status);
 
