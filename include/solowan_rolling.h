@@ -89,7 +89,7 @@ typedef struct {
 	// pktId of the packet holding the string with the previous fingerprint
 	uint64_t pktId;
 	// offset (from the beginning of the packet) where the string begins
-        uint16_t offset;
+	uint16_t offset;
 } FPEntry;
 
 // Type definition for the fingerprint store
@@ -107,9 +107,9 @@ typedef struct {
 	// Data packet
 	Pkt pkt;
 	// Actual packet length
-        uint16_t len;
+	uint16_t len;
 	// Packet hash
-        uint32_t hash;
+	uint32_t hash;
 } PktEntry;
 
 

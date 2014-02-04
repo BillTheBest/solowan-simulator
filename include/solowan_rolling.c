@@ -133,7 +133,7 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	int i;
 	uint32_t hash;
 	FPEntry *fpp;
-//	static int printed = 0;
+	//	static int printed = 0;
 
 	uint32_t computedPacketHash;
 
@@ -269,7 +269,7 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 					dest += sizeof(uint64_t);
 
 					poffsetPktHash = (void *) optpkt+dest;
-					hton32(poffsetPktHash, computedPacketHash);
+					hton32(poffsetPktHash, ps[ref].hash);
 #ifdef DEBUG
 					fprintf(fpdebug,"hash %d ",computedPacketHash);
 #endif
@@ -333,7 +333,7 @@ void dedup(unsigned char *packet, uint16_t pktlen, unsigned char *optpkt, uint16
 	fprintf(fpdebug,"\n");
 	fclose(fpdebug);
 #endif
-	
+
 
 	for (i=0; i<fpNum; i++) {
 		hash = hashFPStore(pktFps[i].fp);
@@ -370,10 +370,10 @@ void recover(uint64_t fp, uint32_t hash, unsigned char *recpkt, uint16_t *reclen
 	uint64_t pid;
 	hashfp = hashFPStore(fp);
 	fpe = fps[hashfp];
- 	if ((pktId >= PKT_STORE_SIZE) && (fpe.pktId < pktId - PKT_STORE_SIZE)) {
-                        DBG(("Entrada obsoleta hash %" PRIu32 " pktId %" PRIu64 " fpp->pktId %" PRIu64 "\n",hash,pktId,fpp->pktId));
-                        fpe.pktId = 0;
-        }
+	if ((pktId >= PKT_STORE_SIZE) && (fpe.pktId < pktId - PKT_STORE_SIZE)) {
+		DBG(("Entrada obsoleta hash %" PRIu32 " pktId %" PRIu64 " fpp->pktId %" PRIu64 "\n",hash,pktId,fpp->pktId));
+		fpe.pktId = 0;
+	}
 
 	if ((fpe.pktId == 0) || (fpe.fp != fp)) {
 		*reclen = 0;
